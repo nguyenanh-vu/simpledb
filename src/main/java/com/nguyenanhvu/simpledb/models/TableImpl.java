@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nguyenanhvu.simpledb.exceptions.IncorrectDataTypeException;
+import com.nguyenanhvu.simpledb.field.Field;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,16 +19,16 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @Getter
-public class Table {
+public class TableImpl {
 	private String name;
-	private List<Field> fields = new ArrayList<>();
-	private Map<Field, Long> indexingFields = new HashMap<>();
+	private List<Field<?>> fields = new ArrayList<>();
+	private Map<Field<?>, Long> indexingFields = new HashMap<>();
 	private Integer size = 0;
 	private Integer numFields = 0;
 	private Integer numIndexingFields = 0;
 	@Setter
 	private Long latestIndex = 0L;
-	private static Logger log = LoggerFactory.getLogger(Field.class);
+	private static Logger log = LoggerFactory.getLogger(TableImpl.class);
 	
 	public void setName(String name) {
 		if (name == null) {
@@ -43,15 +44,16 @@ public class Table {
 		}
 	}
 	
-	public void addField(Field f) {
+	public void addField(Field<?> f) {
 		if (!this.fields.contains(f)) {
 			this.fields.add(f);
 			this.numFields ++;
-			this.size += f.getLength();
+			this.size += f.size();
 		}
 	}
+
 	
-	public void setIndexing(Field f, boolean b) {
+	public void setIndexing(Field<?> f, boolean b) {
 		if (this.fields.contains(f)) {
 			if (b && !this.indexingFields.containsKey(f)) {
 				this.indexingFields.put(f, this.latestIndex);
@@ -67,9 +69,9 @@ public class Table {
 	public byte[] getBytes(Map<String, Object> record) throws IncorrectDataTypeException {
 		byte[] res = new byte[this.size];
 		int i = 0;
-		for (Field f : this.fields) {
-			System.arraycopy(f.getByte(record.get(f.getName())), 0, res, i, f.getLength());
-			i += f.getLength();
+		for (Field<?> f : this.fields) {
+			System.arraycopy(f.getBytes(record.get(f.getName())), 0, res, i, f.size());
+			i += f.size();
 		}
 		return res;
 	}
@@ -78,9 +80,9 @@ public class Table {
 		Map<String, Object> res = new HashMap<>();
 		byte[] b = Arrays.copyOf(buffer, this.size);
 		int i = 0;
-		for (Field f : this.fields) {
-			res.put(f.getName(), f.parse(Arrays.copyOfRange(b, i, i + f.getLength())));
-			i += f.getLength();
+		for (Field<?> f : this.fields) {
+			res.put(f.getName(), f.parse(Arrays.copyOfRange(b, i, i + f.size())));
+			i += f.size();
 		}
 		return res;
 	}
@@ -92,8 +94,8 @@ public class Table {
 	
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Table) {
-			Table o = (Table) obj;
+		if (obj instanceof TableImpl) {
+			TableImpl o = (TableImpl) obj;
 			return (this.name == null || o.name == null 
 					? (this.name == null && o.name == null) 
 							: this.name.contentEquals(o.name))
