@@ -1,0 +1,16 @@
+<Configuration status="info" name="simpledb" packages="">
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyyMMdd HHmmss} %p: %m%n"/>
+        </Console>
+    </Appenders>
+	<Loggers>
+		<Logger name="org.apache.test" level="info" additivity="false">
+	      	<AppenderRef ref="stdout"/>
+	    </Logger>
+		<Root level="info">
+	        <AppenderRef ref="stdout"/>
+	    </Root>
+	</Loggers>
+    
+</Configuration>

@@ -1,15 +1,27 @@
 package com.nguyenanhvu.simpledb.models;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.nguyenanhvu.simpledb.exceptions.IncorrectDataTypeException;
 
 public class FieldTest {
+	private static ByteArrayOutputStream outContent;
+    private static PrintStream printStream;
+	
+	@BeforeAll
+    public static void init() {
+		FieldTest.outContent = new ByteArrayOutputStream();
+		FieldTest.printStream = new PrintStream(FieldTest.outContent);
+        System.setOut(FieldTest.printStream);
+    }
 	
 	private byte[] generateRandomArray(int size) {
 		byte[] res = new byte[size];
@@ -99,6 +111,8 @@ public class FieldTest {
 		Assertions.assertTrue(Arrays.equals(Arrays.copyOf(str.substring(2).getBytes(), str.length()), 
 				f.getByte(str.substring(2))));
 		Assertions.assertTrue(Arrays.equals((str).getBytes(), f.getByte(str + "  ")));
+		Assertions.assertTrue(FieldTest.outContent.toString()
+				.contains("WARN: String too long, expected 10, given 12, string was cropped"));
 		Assertions.assertTrue(Arrays.equals(new byte[str.length()], f.getByte(null)));
 		Assertions.assertThrows(IncorrectDataTypeException.class, 
 				() -> {new Field("a", (byte) 1, Field.Type.STRING).getByte(4.0f);});

@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.nguyenanhvu.simpledb.exceptions.IncorrectDataTypeException;
 
 import lombok.Getter;
@@ -19,7 +22,7 @@ public class Field {
 		BOOLEAN,
 		STRING
 	}
-	
+	private static Logger log = LoggerFactory.getLogger(Field.class);
 	private String name;
 	private Byte size = 1;
 	private Type type;
@@ -92,7 +95,12 @@ public class Field {
 					}
 				case STRING:
 					if (o instanceof String) {
-						return Arrays.copyOf(((String) o).getBytes(), this.length);
+						String s = (String) o;
+						if (s.length() > this.length) {
+							log.warn(String.format("String too long, expected %s, given %s, string was cropped", 
+									this.length, s.length()));
+						}
+						return Arrays.copyOf(s.getBytes(), this.length);	
 					} else {
 						throw new IncorrectDataTypeException("String", o.getClass().getName());
 					}
