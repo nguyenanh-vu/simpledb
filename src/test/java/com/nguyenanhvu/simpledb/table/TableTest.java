@@ -1,4 +1,4 @@
-package com.nguyenanhvu.simpledb.models;
+package com.nguyenanhvu.simpledb.table;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,6 +14,7 @@ import com.nguyenanhvu.simpledb.field.Field;
 import com.nguyenanhvu.simpledb.field.impl.BooleanField;
 import com.nguyenanhvu.simpledb.field.impl.IntegerField;
 import com.nguyenanhvu.simpledb.field.impl.StringField;
+import com.nguyenanhvu.simpledb.table.impl.TableImpl;
 
 @Isolated
 public class TableTest {
@@ -31,7 +32,7 @@ public class TableTest {
 	
 	@Test
 	public void constructorTest() {
-		TableImpl t = new TableImpl("a");
+		Table t = new TableImpl("a");
 		Assertions.assertEquals("a", t.getName());
 		Assertions.assertEquals(0, t.getSize());
 		Assertions.assertEquals(0, t.getNumFields());
@@ -43,7 +44,7 @@ public class TableTest {
 	
 	@Test 
 	public void setNameTest() {
-		TableImpl t = new TableImpl("a");
+		Table t = new TableImpl("a");
 		Assertions.assertEquals("a", t.getName());
 		t = new TableImpl("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		Assertions.assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", t.getName());
@@ -53,7 +54,7 @@ public class TableTest {
 	
 	@Test
 	public void addFieldTest() {
-		TableImpl t = new TableImpl("a");
+		Table t = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new BooleanField("a");
 		Field<?> f3 = new IntegerField("a");
@@ -88,7 +89,7 @@ public class TableTest {
 	
 	@Test
 	public void setIndexingTest() {
-		TableImpl t = new TableImpl("a");
+		Table t = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new BooleanField("a");
 		Field<?> f3 = new IntegerField("a");
@@ -138,10 +139,10 @@ public class TableTest {
 	
 	@Test
 	public void hashCodeTest() {
-		TableImpl t1 = new TableImpl("a");
-		TableImpl t2 = new TableImpl("a");
-		TableImpl t3 = new TableImpl("a");
-		TableImpl t4 = new TableImpl("a");
+		Table t1 = new TableImpl("a");
+		Table t2 = new TableImpl("a");
+		Table t3 = new TableImpl("a");
+		Table t4 = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new IntegerField("a");
 		
@@ -166,10 +167,10 @@ public class TableTest {
 	
 	@Test
 	public void testEquals() {
-		TableImpl t1 = new TableImpl("a");
-		TableImpl t2 = new TableImpl("aa");
-		TableImpl t3 = new TableImpl("a");
-		TableImpl t4 = new TableImpl("a");
+		Table t1 = new TableImpl("a");
+		Table t2 = new TableImpl("aa");
+		Table t3 = new TableImpl("a");
+		Table t4 = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new IntegerField("a");
 		
@@ -196,7 +197,7 @@ public class TableTest {
 	
 	@Test
 	public void getBytesTest() throws IncorrectDataTypeException {
-		TableImpl t1 = new TableImpl("a");
+		Table t1 = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new StringField("b", 2);
 		t1.addField(f1);

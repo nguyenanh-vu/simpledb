@@ -1,4 +1,4 @@
-package com.nguyenanhvu.simpledb.models;
+package com.nguyenanhvu.simpledb.table.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,13 +11,14 @@ import org.slf4j.LoggerFactory;
 
 import com.nguyenanhvu.simpledb.exceptions.IncorrectDataTypeException;
 import com.nguyenanhvu.simpledb.field.Field;
+import com.nguyenanhvu.simpledb.table.Table;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
 @Getter
-public class TableImpl {
+public class TableImpl implements Table{
 	@NonNull
 	private String name;
 	private List<Field<?>> fields = new ArrayList<>();
