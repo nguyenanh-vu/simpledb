@@ -1,18 +1,14 @@
 package com.nguyenanhvu.simpledb.models;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Isolated;
 
-import com.nguyenanhvu.simpledb.AppTest;
 import com.nguyenanhvu.simpledb.exceptions.IncorrectDataTypeException;
 import com.nguyenanhvu.simpledb.field.Field;
 import com.nguyenanhvu.simpledb.field.impl.BooleanField;
