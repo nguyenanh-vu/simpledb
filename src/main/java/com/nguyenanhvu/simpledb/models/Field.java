@@ -1,7 +1,6 @@
 package com.nguyenanhvu.simpledb.models;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,8 +34,41 @@ public class Field {
 		this.length = Field.length(length, type);
 	}
 	
+	public Field(byte[] buffer) {
+		byte[] b = Arrays.copyOf(buffer, 32);
+		this.name = new String(Arrays.copyOf(b, 27)).trim();
+		switch (b[27]) {
+			case 1:
+				this.type = Field.Type.BOOLEAN;
+				break;
+			case 2:
+				this.type = Field.Type.DATETIME;
+				break;
+			case 3:
+				this.type = Field.Type.FLOAT;
+				break;
+			case 4:
+				this.type = Field.Type.INTEGER;
+				break;
+			case 5:
+				this.type = Field.Type.STRING;
+				break;
+			default:
+				break;
+		}
+		this.length = Field.length(Integer.valueOf(ByteBuffer
+				.wrap(Arrays.copyOfRange(b, 28, 32)).getInt())
+				, this.type);
+	}
+	
 	public Field(String name, Integer length, Field.Type type) {
-		this.name = name;
+		if (name.length() > 27) {
+			this.name = name.substring(0, 27);
+			log.warn(String.format("Field name too long, expected 27, %d given, string was cropped to %s", 
+					name.length(), name.substring(0, 27)));
+		} else {
+			this.name = name;
+		}
 		this.type = type;
 		this.length = Field.length(length, type);
 	}
@@ -72,8 +104,7 @@ public class Field {
 				case BOOLEAN:
 					return buffer[0] != 0;
 				case STRING:
-					return new String(ByteBuffer.wrap(Arrays.copyOf(buffer, this.length))
-							.array(), StandardCharsets.UTF_8);
+					return new String(Arrays.copyOf(buffer, this.length)).trim();
 				case DATETIME:
 					byte[] b = Arrays.copyOf(buffer, 8);
 					return LocalDateTime.of(((int) b[1])*128 + (int) b[2], (int) b[3], (int) b[4], 
@@ -111,8 +142,8 @@ public class Field {
 					if (o instanceof String) {
 						String s = (String) o;
 						if (s.length() > this.length) {
-							log.warn(String.format("String too long, expected %s, %s given, string was cropped", 
-									this.length, s.length()));
+							log.warn(String.format("String too long, expected %d, %d given, string was cropped to %s", 
+									this.length, s.length(), s.substring(0, this.length)));
 						}
 						return Arrays.copyOf(s.getBytes(), this.length);	
 					} else {
@@ -135,6 +166,49 @@ public class Field {
 					}
 			}
 			return null;
+		}
+	}
+	
+	public byte[] getBytes() {
+		byte[] res = new byte[32];
+		if (this.name != null) {
+			System.arraycopy(Arrays.copyOf(this.name.getBytes(), 27), 0, res, 0, 27);	
+		}
+		System.arraycopy(ByteBuffer.allocate(4).putInt(this.length).array(), 0, res, 28, 4);
+		byte b;
+		switch (this.type) {
+			case BOOLEAN:
+				b = 1;
+				break;
+			case DATETIME:
+				b = 2;
+				break;
+			case FLOAT:
+				b = 3;
+				break;
+			case INTEGER:
+				b = 4;
+				break;
+			case STRING:
+				b = 5;
+				break;
+			default:
+				b = 0;
+				break;
+		}
+		res[27] = b;
+		return res;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Field) {
+			Field o = (Field) obj;
+			return (this.name == null || o.name == null? true : this.name.contentEquals(o.name))
+					&& this.length == o.length
+					&& this.type.equals(o.type);
+		} else {
+			return false;
 		}
 	}
 }

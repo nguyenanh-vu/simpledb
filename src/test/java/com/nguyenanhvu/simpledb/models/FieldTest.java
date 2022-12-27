@@ -21,7 +21,7 @@ public class FieldTest {
     public static void init() {
 		FieldTest.outContent = new ByteArrayOutputStream();
 		FieldTest.printStream = new PrintStream(FieldTest.outContent);
-        System.setOut(FieldTest.printStream);
+		System.setOut(FieldTest.printStream);
     }
 	
 	private byte[] generateRandomArray(int size) {
@@ -45,11 +45,48 @@ public class FieldTest {
 	@Test
 	public void constructorTest() {
 		Assertions.assertEquals("a", new Field("a", 0, Field.Type.FLOAT).getName());
+		Assertions.assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaa", 
+				new Field("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, Field.Type.FLOAT).getName());
+		Assertions.assertTrue(FieldTest.outContent.toString()
+				.contains("WARN"));
 		Assertions.assertEquals(1, new Field(0, Field.Type.BOOLEAN).getLength());
 		Assertions.assertEquals(4, new Field(0, Field.Type.FLOAT).getLength());
 		Assertions.assertEquals(4, new Field(0, Field.Type.INTEGER).getLength());
 		Assertions.assertEquals(3, new Field(3, Field.Type.STRING).getLength());
 		Assertions.assertEquals(8, new Field(0, Field.Type.DATETIME).getLength());
+	}
+	
+	@Test
+	public void getBytesHeaderTest() {
+		Field f = new Field("a", 8, Field.Type.STRING);
+		byte[] b = f.getBytes();
+		Assertions.assertEquals(32, b.length);
+		Assertions.assertEquals("a", new String(Arrays.copyOf(b, 32)).trim());
+		Assertions.assertEquals(5, b[27]);
+		Assertions.assertEquals(8, Integer.valueOf(ByteBuffer.wrap(Arrays.copyOfRange(b, 28, 32)).getInt()));
+		Assertions.assertEquals(f, new Field(b));
+		
+		for (Field.Type t : Field.Type.values()) {
+			f = new Field(0, t);
+			Assertions.assertEquals(f, new Field(f.getBytes()));
+		}
+	}
+	
+	@Test
+	public void equalsTest() {
+		Field f1 = new Field("a", 0, Field.Type.STRING);
+		Field f2 = new Field(0, Field.Type.BOOLEAN);
+		Field f3 = new Field(0, Field.Type.STRING);
+		Field f4 = new Field("a", 1, Field.Type.STRING);
+		Field f5 = new Field("b", 0, Field.Type.STRING);
+		
+		Assertions.assertEquals(f1, f1);
+		Assertions.assertEquals(f1, f3);
+		Assertions.assertNotEquals(f1, f2);
+		Assertions.assertNotEquals(f1, f4);
+		Assertions.assertNotEquals(f1, f5);
+		Assertions.assertNotEquals(f1, null);
+		Assertions.assertNotEquals(f1, 4);
 	}
 	
 	@Test
@@ -81,8 +118,7 @@ public class FieldTest {
 				.parse(this.addRand(new byte[4], 8)));
 		
 		Assertions.assertEquals(LocalDateTime.parse("2022-12-27T10:49:00"), (LocalDateTime) new Field(str.length(), Field.Type.DATETIME)
-				.parse(new byte[] {(byte) 0, (byte) 15, (byte) 102, (byte) 12, 
-						(byte) 27, (byte) 10, (byte) 49, (byte) 0}));
+				.parse(new byte[] {0, 15, 102, 12, 27, 10, 49, 0}));
 		
 		Assertions.assertNull(new Field(0, Field.Type.DATETIME)
 				.parse(this.addRand(new byte[8], 8)));
@@ -129,8 +165,7 @@ public class FieldTest {
 		
 		//Integer
 		f = new Field(1, Field.Type.DATETIME);
-		Assertions.assertTrue(Arrays.equals(new byte[] {(byte) 0, (byte) 15, (byte) 102, (byte) 12, 
-				(byte) 27, (byte) 10, (byte) 49, (byte) 0}, 
+		Assertions.assertTrue(Arrays.equals(new byte[] {0, 15, 102, 12, 27, 10, 49, 0}, 
 				f.getByte(LocalDateTime.parse("2022-12-27T10:49:00"))));
 		Assertions.assertTrue(Arrays.equals(new byte[8], f.getByte(null)));
 		Assertions.assertThrows(IncorrectDataTypeException.class, 
