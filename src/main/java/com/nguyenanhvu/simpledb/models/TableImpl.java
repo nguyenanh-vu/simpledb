@@ -7,19 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nguyenanhvu.simpledb.exceptions.IncorrectDataTypeException;
 import com.nguyenanhvu.simpledb.field.Field;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 
-@NoArgsConstructor
 @Getter
 public class TableImpl {
+	@NonNull
 	private String name;
 	private List<Field<?>> fields = new ArrayList<>();
 	private Map<Field<?>, Long> indexingFields = new HashMap<>();
@@ -28,19 +27,15 @@ public class TableImpl {
 	private Integer numIndexingFields = 0;
 	@Setter
 	private Long latestIndex = 0L;
-	private static Logger log = LoggerFactory.getLogger(TableImpl.class);
 	
-	public void setName(String name) {
-		if (name == null) {
-			this.name = null;
+	public TableImpl(String name) {
+		if (name.length() > 32) {
+			this.name = name.substring(0, 32).trim();
+			LoggerFactory.getLogger(this.getClass())
+			.warn(String.format("Table name too long, expected 32, %d given, string was cropped to %s", 
+					name.length(), name.substring(0, 32)));
 		} else {
-			if (name.length() > 32) {
-				this.name = name.substring(0, 32).trim();
-				log.warn(String.format("Table name too long, expected 32, %d given, string was cropped to %s", 
-						name.length(), name.substring(0, 32)));
-			} else {
-				this.name = name.trim();
-			}
+			this.name = name.trim();
 		}
 	}
 	
@@ -51,7 +46,6 @@ public class TableImpl {
 			this.size += f.size();
 		}
 	}
-
 	
 	public void setIndexing(Field<?> f, boolean b) {
 		if (this.fields.contains(f)) {
@@ -96,9 +90,7 @@ public class TableImpl {
 	public boolean equals(Object obj) {
 		if (obj instanceof TableImpl) {
 			TableImpl o = (TableImpl) obj;
-			return (this.name == null || o.name == null 
-					? (this.name == null && o.name == null) 
-							: this.name.contentEquals(o.name))
+			return this.name.contentEquals(o.name)
 					&& this.indexingFields.equals(o.indexingFields)
 					&& this.fields.equals(o.fields);
 		} else {

@@ -21,20 +21,6 @@ import com.nguyenanhvu.simpledb.field.impl.StringField;
 
 @Isolated
 public class TableTest {
-	private static ByteArrayOutputStream outContent;
-    private static PrintStream printStream;
-	
-	@BeforeAll
-    public static void init() {
-		if (AppTest.outContent == null) {
-			TableTest.outContent = new ByteArrayOutputStream();
-			TableTest.printStream = new PrintStream(TableTest.outContent);
-			System.setOut(TableTest.printStream);
-		} else {
-			TableTest.outContent = AppTest.outContent;
-		}
-	}
-	
 	private byte[] generateRandomArray(int size) {
 		byte[] res = new byte[size];
 		new Random().nextBytes(res);
@@ -49,8 +35,8 @@ public class TableTest {
 	
 	@Test
 	public void constructorTest() {
-		TableImpl t = new TableImpl();
-		Assertions.assertEquals(null, t.getName());
+		TableImpl t = new TableImpl("a");
+		Assertions.assertEquals("a", t.getName());
 		Assertions.assertEquals(0, t.getSize());
 		Assertions.assertEquals(0, t.getNumFields());
 		Assertions.assertEquals(0, t.getNumIndexingFields());
@@ -61,20 +47,17 @@ public class TableTest {
 	
 	@Test 
 	public void setNameTest() {
-		TableImpl t = new TableImpl();
-		t.setName("a");
+		TableImpl t = new TableImpl("a");
 		Assertions.assertEquals("a", t.getName());
-		t.setName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		t = new TableImpl("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		Assertions.assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", t.getName());
-		t.setName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		t = new TableImpl("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		Assertions.assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", t.getName());
-		Assertions.assertTrue(TableTest.outContent.toString()
-				.contains("WARN: Table name too long, expected 32, 34 given"));
 	}
 	
 	@Test
 	public void addFieldTest() {
-		TableImpl t = new TableImpl();
+		TableImpl t = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new BooleanField("a");
 		Field<?> f3 = new IntegerField("a");
@@ -109,7 +92,7 @@ public class TableTest {
 	
 	@Test
 	public void setIndexingTest() {
-		TableImpl t = new TableImpl();
+		TableImpl t = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new BooleanField("a");
 		Field<?> f3 = new IntegerField("a");
@@ -159,10 +142,10 @@ public class TableTest {
 	
 	@Test
 	public void hashCodeTest() {
-		TableImpl t1 = new TableImpl();
-		TableImpl t2 = new TableImpl();
-		TableImpl t3 = new TableImpl();
-		TableImpl t4 = new TableImpl();
+		TableImpl t1 = new TableImpl("a");
+		TableImpl t2 = new TableImpl("a");
+		TableImpl t3 = new TableImpl("a");
+		TableImpl t4 = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new IntegerField("a");
 		
@@ -187,10 +170,10 @@ public class TableTest {
 	
 	@Test
 	public void testEquals() {
-		TableImpl t1 = new TableImpl();
-		TableImpl t2 = new TableImpl();
-		TableImpl t3 = new TableImpl();
-		TableImpl t4 = new TableImpl();
+		TableImpl t1 = new TableImpl("a");
+		TableImpl t2 = new TableImpl("aa");
+		TableImpl t3 = new TableImpl("a");
+		TableImpl t4 = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new IntegerField("a");
 		
@@ -208,28 +191,16 @@ public class TableTest {
 		t4.setIndexing(f1, true);
 		t3.setIndexing(f2, true);
 		
-		Assertions.assertEquals(t1, t2);
-		Assertions.assertNotEquals(t1, t3);
-		Assertions.assertNotEquals(t1, t4);
-		Assertions.assertNotEquals(t1, f1);
-		
-		t1.setName("a");
+		Assertions.assertEquals(t1, t1);
 		Assertions.assertNotEquals(t1, t2);
 		Assertions.assertNotEquals(t1, t3);
 		Assertions.assertNotEquals(t1, t4);
 		Assertions.assertNotEquals(t1, f1);
-		
-		t2.setName("a");
-		Assertions.assertEquals(t1, t2);
-		t2.setName("aa");
-		Assertions.assertNotEquals(t1, t2);
-		t1.setName(null);
-		Assertions.assertNotEquals(t1, t2);
 	}
 	
 	@Test
 	public void getBytesTest() throws IncorrectDataTypeException {
-		TableImpl t1 = new TableImpl();
+		TableImpl t1 = new TableImpl("a");
 		Field<?> f1 = new BooleanField("a");
 		Field<?> f2 = new StringField("b", 2);
 		t1.addField(f1);
