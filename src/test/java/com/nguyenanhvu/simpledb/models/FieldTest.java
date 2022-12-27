@@ -5,25 +5,33 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Random;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 
+import com.nguyenanhvu.simpledb.AppTest;
 import com.nguyenanhvu.simpledb.exceptions.IncorrectDataTypeException;
 
+@Isolated
 public class FieldTest {
 	private static ByteArrayOutputStream outContent;
     private static PrintStream printStream;
 	
 	@BeforeAll
     public static void init() {
-		FieldTest.outContent = new ByteArrayOutputStream();
-		FieldTest.printStream = new PrintStream(FieldTest.outContent);
-		System.setOut(FieldTest.printStream);
-    }
-	
+		if (AppTest.outContent == null) {
+			FieldTest.outContent = new ByteArrayOutputStream();
+			FieldTest.printStream = new PrintStream(FieldTest.outContent);
+			System.setOut(FieldTest.printStream);
+		} else {
+			FieldTest.outContent = AppTest.outContent;
+		}
+	}
+		
 	private byte[] generateRandomArray(int size) {
 		byte[] res = new byte[size];
 		new Random().nextBytes(res);
@@ -44,11 +52,11 @@ public class FieldTest {
 	
 	@Test
 	public void constructorTest() {
+		Assertions.assertEquals(null, new Field(null, 0, Field.Type.FLOAT).getName());
 		Assertions.assertEquals("a", new Field("a", 0, Field.Type.FLOAT).getName());
 		Assertions.assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaa", 
 				new Field("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, Field.Type.FLOAT).getName());
-		Assertions.assertTrue(FieldTest.outContent.toString()
-				.contains("WARN"));
+		Assertions.assertTrue(FieldTest.outContent.toString().contains("WARN"));
 		Assertions.assertEquals(1, new Field(0, Field.Type.BOOLEAN).getLength());
 		Assertions.assertEquals(4, new Field(0, Field.Type.FLOAT).getLength());
 		Assertions.assertEquals(4, new Field(0, Field.Type.INTEGER).getLength());
@@ -68,6 +76,7 @@ public class FieldTest {
 		
 		for (Field.Type t : Field.Type.values()) {
 			f = new Field(0, t);
+			Assertions.assertEquals(f.getName(), new Field(f.getBytes()).getName() );
 			Assertions.assertEquals(f, new Field(f.getBytes()));
 		}
 	}
@@ -81,12 +90,22 @@ public class FieldTest {
 		Field f5 = new Field("b", 0, Field.Type.STRING);
 		
 		Assertions.assertEquals(f1, f1);
-		Assertions.assertEquals(f1, f3);
+		Assertions.assertNotEquals(f1, f3);
 		Assertions.assertNotEquals(f1, f2);
 		Assertions.assertNotEquals(f1, f4);
 		Assertions.assertNotEquals(f1, f5);
 		Assertions.assertNotEquals(f1, null);
 		Assertions.assertNotEquals(f1, 4);
+	}
+	
+	@Test
+	public void hashTest() {
+		Assertions.assertEquals(Objects.hash(null, 5,0), new Field(0, Field.Type.STRING).hashCode());
+		Assertions.assertEquals(Objects.hash("a", 5,1), new Field("a", 1, Field.Type.STRING).hashCode());
+		Assertions.assertEquals(Objects.hash(null, 1,1), new Field(0, Field.Type.BOOLEAN).hashCode());
+		Assertions.assertEquals(Objects.hash(null, 2,8), new Field(0, Field.Type.DATETIME).hashCode());
+		Assertions.assertEquals(Objects.hash(null, 3,4), new Field(0, Field.Type.FLOAT).hashCode());
+		Assertions.assertEquals(Objects.hash(null, 4,4), new Field(0, Field.Type.INTEGER).hashCode());
 	}
 	
 	@Test
@@ -163,7 +182,7 @@ public class FieldTest {
 		Assertions.assertThrows(IncorrectDataTypeException.class, 
 				() -> {new Field(1, Field.Type.STRING).getByte(4.0f);});
 		
-		//Integer
+		//Date
 		f = new Field(1, Field.Type.DATETIME);
 		Assertions.assertTrue(Arrays.equals(new byte[] {0, 15, 102, 12, 27, 10, 49, 0}, 
 				f.getByte(LocalDateTime.parse("2022-12-27T10:49:00"))));

@@ -3,9 +3,7 @@ package com.nguyenanhvu.simpledb.models;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +25,6 @@ public class Field {
 	private String name;
 	private Type type;
 	private Integer length;
-	private Map<String, List<Integer>> map = new HashMap<>();
 	
 	public Field(Integer length, Field.Type type) {
 		this.type = type;
@@ -36,7 +33,9 @@ public class Field {
 	
 	public Field(byte[] buffer) {
 		byte[] b = Arrays.copyOf(buffer, 32);
-		this.name = new String(Arrays.copyOf(b, 27)).trim();
+		if (!Arrays.equals(new byte[27], Arrays.copyOf(b, 27))) {
+			this.name = new String(Arrays.copyOf(b, 27)).trim();	
+		}
 		switch (b[27]) {
 			case 1:
 				this.type = Field.Type.BOOLEAN;
@@ -62,12 +61,16 @@ public class Field {
 	}
 	
 	public Field(String name, Integer length, Field.Type type) {
-		if (name.length() > 27) {
-			this.name = name.substring(0, 27);
+		if (name != null && name.length() > 27) {
+			this.name = name.substring(0, 27).trim();
 			log.warn(String.format("Field name too long, expected 27, %d given, string was cropped to %s", 
 					name.length(), name.substring(0, 27)));
 		} else {
-			this.name = name;
+			if (name != null) {
+				this.name = name.trim();	
+			} else {
+				this.name = null;
+			}
 		}
 		this.type = type;
 		this.length = Field.length(length, type);
@@ -200,11 +203,35 @@ public class Field {
 		return res;
 	}
 	
+	private int hash() {
+		switch (this.type) {
+		case BOOLEAN:
+			return 1;
+		case DATETIME:
+			return 2;
+		case FLOAT:
+			return 3;
+		case INTEGER:
+			return 4;
+		case STRING:
+			return 5;
+		default:
+			return 0;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.name, this.hash(), this.length);
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Field) {
 			Field o = (Field) obj;
-			return (this.name == null || o.name == null? true : this.name.contentEquals(o.name))
+			return (this.name == null || o.name == null 
+					? (this.name == null && o.name == null ) 
+							: this.name.contentEquals(o.name))
 					&& this.length == o.length
 					&& this.type.equals(o.type);
 		} else {
