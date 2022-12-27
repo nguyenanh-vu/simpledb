@@ -8,6 +8,6 @@ public class IncorrectDataTypeException extends Exception {
 	}
 	
 	public IncorrectDataTypeException(String expected, String instead) {
-		super(String.format("Expected %s, instead %s", expected, instead));
+		super(String.format("Expected %s, %s given", expected, instead));
 	}
 }

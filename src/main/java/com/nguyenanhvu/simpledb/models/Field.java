@@ -2,6 +2,7 @@ package com.nguyenanhvu.simpledb.models;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -17,34 +18,43 @@ import lombok.Getter;
 @Getter
 public class Field {
 	public enum Type {
-		INT,
+		INTEGER,
 		FLOAT,
 		BOOLEAN,
-		STRING
+		STRING,
+		DATETIME
 	}
 	private static Logger log = LoggerFactory.getLogger(Field.class);
 	private String name;
-	private Byte size = 1;
 	private Type type;
 	private Integer length;
 	private Map<String, List<Integer>> map = new HashMap<>();
 	
-	public Field(String name, Byte size, Type type) {
-		this.name = name;
+	public Field(Integer length, Field.Type type) {
 		this.type = type;
-		if (type.equals(Type.STRING)) {
-			this.size = size;
-		}
-		this.length = length();
+		this.length = Field.length(length, type);
 	}
 	
-	public Integer length() {
-		if (this.type.equals(Type.STRING)) {
-			return (int) this.size;
-		} else if (this.type.equals(Type.BOOLEAN)) {
+	public Field(String name, Integer length, Field.Type type) {
+		this.name = name;
+		this.type = type;
+		this.length = Field.length(length, type);
+	}
+	
+	private static Integer length(Integer length, Field.Type type) {
+		switch (type) {
+		case STRING:
+			return length;
+		case BOOLEAN:
 			return 1;
-		} else {
+		case FLOAT:
 			return 4;
+		case INTEGER:
+			return 4;
+		case DATETIME:
+			return 8;
+		default:
+			return 0;
 		}
 	}
 	
@@ -55,7 +65,7 @@ public class Field {
 			return null;
 		} else {
 			switch (this.type) {
-				case INT:
+				case INTEGER:
 					return Integer.valueOf(ByteBuffer.wrap(buffer).getInt()); 
 				case FLOAT:
 					return Float.valueOf(ByteBuffer.wrap(buffer).getFloat());
@@ -64,7 +74,11 @@ public class Field {
 				case STRING:
 					return new String(ByteBuffer.wrap(Arrays.copyOf(buffer, this.length))
 							.array(), StandardCharsets.UTF_8);
-			}
+				case DATETIME:
+					byte[] b = Arrays.copyOf(buffer, 8);
+					return LocalDateTime.of(((int) b[1])*128 + (int) b[2], (int) b[3], (int) b[4], 
+							(int) b[5], (int) b[6], (int) b[7]);
+				}
 			return null;
 		}
 	}
@@ -87,7 +101,7 @@ public class Field {
 					} else {
 						throw new IncorrectDataTypeException("Float", o.getClass().getName());
 					}
-				case INT:
+				case INTEGER:
 					if (o instanceof Integer) {
 						return ByteBuffer.allocate(4).putInt((int) o).array();
 					} else {
@@ -97,12 +111,27 @@ public class Field {
 					if (o instanceof String) {
 						String s = (String) o;
 						if (s.length() > this.length) {
-							log.warn(String.format("String too long, expected %s, given %s, string was cropped", 
+							log.warn(String.format("String too long, expected %s, %s given, string was cropped", 
 									this.length, s.length()));
 						}
 						return Arrays.copyOf(s.getBytes(), this.length);	
 					} else {
 						throw new IncorrectDataTypeException("String", o.getClass().getName());
+					}
+				case DATETIME:
+					if (o instanceof LocalDateTime) {
+						byte[] res = new byte[8];
+						LocalDateTime ts = (LocalDateTime) o;
+						res[1] = (byte) (ts.getYear() / 128);
+						res[2] = (byte) (ts.getYear() % 128);
+						res[3] = (byte) ts.getMonthValue();
+						res[4] = (byte) ts.getDayOfMonth();
+						res[5] = (byte) ts.getHour();
+						res[6] = (byte) ts.getMinute();
+						res[7] = (byte) ts.getSecond();
+						return res;
+					} else {
+						throw new IncorrectDataTypeException("LocalDateTime", o.getClass().getName());
 					}
 			}
 			return null;
